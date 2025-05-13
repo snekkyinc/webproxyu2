@@ -1,93 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Proxy Viewer</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            min-height: 100vh;
-        }
+const express = require('express');
+const axios = require('axios');
+const app = express();
+const port = 3000;
 
-        header {
-            background-color: #333;
-            color: white;
-            text-align: center;
-            padding: 10px;
-            width: 100%;
-        }
+// Middleware to allow all CORS for simplicity (in production, be more restrictive)
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    next();
+});
 
-        .content {
-            width: 100%;
-            height: 80vh;
-            overflow: auto;
-        }
+// Proxy endpoint to fetch content from external websites
+app.get('/proxy', async (req, res) => {
+    const targetUrl = req.query.url;
+    if (!targetUrl) {
+        return res.status(400).json({ error: 'Missing target URL' });
+    }
 
-        .url-input {
-            margin: 20px;
-            padding: 10px;
-            font-size: 16px;
-            width: 50%;
-            text-align: center;
-        }
-
-        .btn {
-            background-color: #333;
-            color: white;
-            padding: 10px;
-            font-size: 16px;
-            cursor: pointer;
-            border: none;
-            width: 50%;
-        }
-
-        .btn:hover {
-            background-color: #444;
-        }
-    </style>
-</head>
-<body>
-    <header>
-        <h1>Web Proxy Viewer</h1>
-    </header>
-
-    <input type="text" id="url" class="url-input" placeholder="Enter URL (e.g., https://www.reddit.com)" />
-    <button class="btn" onclick="loadWebsite()">Load Website</button>
-
-    <div class="content" id="content"></div>
-
-    <script>
-        function loadWebsite() {
-            const url = document.getElementById('url').value;
-            if (!url) {
-                alert('Please enter a URL!');
-                return;
+    try {
+        // Fetch content from the target URL
+        const response = await axios.get(targetUrl, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
             }
+        });
 
-            // Make a request to our proxy server
-            fetch(`http://localhost:3000/proxy?url=${encodeURIComponent(url)}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch the content');
-                    }
-                    return response.text();
-                })
-                .then(data => {
-                    // Display the content in the div
-                    document.getElementById('content').innerHTML = data;
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Failed to load the website.');
-                });
-        }
-    </script>
-</body>
-</html>
+        // Forward the content to the client
+        res.send(response.data);
+    } catch (error) {
+        console.error('Error fetching the URL:', error);
+        res.status(500).json({ error: 'Failed to fetch the content' });
+    }
+});
+
+// Serve frontend HTML
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/index.html');
+});
+
+// Start the server
+app.listen(port, () => {
+    console.log(`Proxy server running on http://localhost:${port}`);
+});
