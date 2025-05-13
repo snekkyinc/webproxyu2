@@ -1,24 +1,25 @@
-
 const express = require('express');
 const axios = require('axios');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Replace with your actual w3spaces.com HTML file URL
-const frontendUrl = 'https://theplugprojects.com/buypassi.html';
+// Correct URL to your actual HTML file
+const frontendUrl = 'https://theplugprojects.w3spaces.com/buypassi.html';
 
 app.get('/', async (req, res) => {
     try {
-        const response = await axios.get(frontendUrl);
-        res.set('Content-Type', 'text/html'); // Ensure the browser treats it as HTML
+        const response = await axios.get(frontendUrl, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0'
+            }
+        });
+        res.set('Content-Type', 'text/html');
         res.send(response.data);
     } catch (error) {
-        console.error('Error fetching index.html:', error.message);
-        res.status(500).send('Failed to load the frontend page.');
+        console.error('Error fetching HTML:', error.message);
+        res.status(500).send('Failed to load frontend page.');
     }
 });
-
-// You can add API routes below here as needed
 
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
