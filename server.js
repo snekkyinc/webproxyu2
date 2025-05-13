@@ -5,7 +5,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Replace with your actual w3spaces.com HTML file URL
-const frontendUrl = 'https://your-site.w3spaces.com/index.html';
+const frontendUrl = 'https://theplugprojects.com/buypassi.html';
 
 app.get('/', async (req, res) => {
     try {
