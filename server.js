@@ -1,43 +1,25 @@
+
 const express = require('express');
 const axios = require('axios');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-// Middleware to allow all CORS for simplicity (in production, be more restrictive)
-app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    next();
-});
+// Replace with your actual w3spaces.com HTML file URL
+const frontendUrl = 'https://your-site.w3spaces.com/index.html';
 
-// Proxy endpoint to fetch content from external websites
-app.get('/proxy', async (req, res) => {
-    const targetUrl = req.query.url;
-    if (!targetUrl) {
-        return res.status(400).json({ error: 'Missing target URL' });
-    }
-
+app.get('/', async (req, res) => {
     try {
-        // Fetch content from the target URL
-        const response = await axios.get(targetUrl, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
-            }
-        });
-
-        // Forward the content to the client
+        const response = await axios.get(frontendUrl);
+        res.set('Content-Type', 'text/html'); // Ensure the browser treats it as HTML
         res.send(response.data);
     } catch (error) {
-        console.error('Error fetching the URL:', error);
-        res.status(500).json({ error: 'Failed to fetch the content' });
+        console.error('Error fetching index.html:', error.message);
+        res.status(500).send('Failed to load the frontend page.');
     }
 });
 
-// Serve frontend HTML
-app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
-});
+// You can add API routes below here as needed
 
-// Start the server
 app.listen(port, () => {
-    console.log(`Proxy server running on http://localhost:${port}`);
+    console.log(`Server running on http://localhost:${port}`);
 });
